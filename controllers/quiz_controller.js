@@ -222,3 +222,67 @@ exports.check = function (req, res, next) {
         answer: answer
     });
 };
+
+
+// GET /quizzes/randomplay
+exports.randomplay = function (req, res, next) {
+
+    var respuestas_preguntas = req.session.respuestas_preguntas;
+
+    if (!respuestas_preguntas) {  // Comprueba las preguntas contestadas
+        respuestas_preguntas = req.session.respuestas_preguntas = [0];
+    }
+
+    models.Quiz.findAll({ // Busca las preguntas que faltan por responder
+        where: {
+            id: {
+                $notIn: respuestas_preguntas
+            }
+        }   
+    })
+
+    .then(function(pending_quizzes) {
+
+        // Quedan preguntas por responder
+        if(pending_quizzes.length > 0) {   
+            var quiz = pending_quizzes[Math.floor((Math.random() * pending_quizzes.length))]; // Elección aleatoria de la pregunta
+            res.render('quizzes/random_play', {
+                score: respuestas_preguntas.length-1, // Puntuación: número de respuestas correctas
+                quiz: quiz
+            });
+
+        // No quedan preguntas
+        } else {                 
+                res.render('quizzes/random_nomore', {
+                score: respuestas_preguntas.length-1  // Puntuación: número de respuestas correctas
+            });
+        }
+    })
+    .catch(function(error) {    // Error de acceso a la base de datos
+        next(error);
+    });
+};
+
+
+// GET /quizzes/randomcheck/:quizId(\\d+)
+exports.randomcheck = function (req, res, next) {
+
+    var answer = req.query.answer || "";    // Guarda la respuesta del jugador
+
+    var result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();  // Comprueba si la respuesta introducida es correcta
+
+     // Termina el juego y borra las respuestas ya contestadas
+    if(!result) {
+        req.session.respuestas_preguntas = [0];         
+    } else {
+        req.session.respuestas_preguntas.push(req.quiz.id);       // Guarda el ID de la nueva pregunta contestada correctamente
+    }
+
+    var score = req.session.respuestas_preguntas.length-1;    // Puntuación: número de respuestas correctas
+
+    res.render('quizzes/random_result', {
+        score: score,   
+        result: result,
+        answer: answer
+    });
+};
