@@ -192,51 +192,58 @@ exports.check = function (req, res, next) {
 // GET /quizzes/randomplay
 exports.randomplay = function (req, res, next) {
 
-    var answered_questions = req.session.answered_questions;
+    var respuestas_preguntas = req.session.respuestas_preguntas;
 
-    if (!answered_questions) {  // Comprobación de la existencia del array que almacena los IDs de las preguntas contestadas
-        answered_questions = req.session.answered_questions = [0];
+    if (!respuestas_preguntas) {  // Comprueba las preguntas contestadas
+        respuestas_preguntas = req.session.respuestas_preguntas = [0];
     }
 
-    models.Quiz.findAll({       // Búsqueda de las preguntas pendientes por responder
+    models.Quiz.findAll({ // Busca las preguntas que faltan por responder
         where: {
             id: {
-                $notIn: answered_questions
+                $notIn: respuestas_preguntas
             }
         }   
     })
+
     .then(function(pending_quizzes) {
-        if(pending_quizzes.length > 0) {   // Quedan preguntas pendientes de responder
+
+        // Quedan preguntas por responder
+        if(pending_quizzes.length > 0) {   
             var quiz = pending_quizzes[Math.floor((Math.random() * pending_quizzes.length))]; // Elección aleatoria de la pregunta
             res.render('quizzes/random_play', {
-                score: answered_questions.length-1, // Puntuación
+                score: respuestas_preguntas.length-1, // Puntuación: número de respuestas correctas
                 quiz: quiz
             });
-        } else {                // No quedan preguntas pendientes de responder
-                res.render('quizzes/random_none', {
-                score: answered_questions.length-1  // Puntuación
+
+        // No quedan preguntas
+        } else {                 
+                res.render('quizzes/random_nomore', {
+                score: respuestas_preguntas.length-1  // Puntuación: número de respuestas correctas
             });
         }
     })
-    .catch(function(error) {    // Atencíon del error de acceso a la BBDD
+    .catch(function(error) {    // Error de acceso a la base de datos
         next(error);
     });
 };
 
+
 // GET /quizzes/randomcheck/:quizId(\\d+)
 exports.randomcheck = function (req, res, next) {
 
-    var answer = req.query.answer || "";    // Guardado de la respuesta del jugador
+    var answer = req.query.answer || "";    // Guarda la respuesta del jugador
 
-    var result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();  // Comprobación de la veracidad de la respuesta
+    var result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();  // Comprueba si la respuesta introducida es correcta
 
+     // Termina el juego y borra las respuestas ya contestadas
     if(!result) {
-        req.session.answered_questions = [0];                   // Juego terminado y borrado de las preguntas ya contestadas 
+        req.session.respuestas_preguntas = [0];         
     } else {
-        req.session.answered_questions.push(req.quiz.id);       // Guardado del ID de la nueva pregunta contestada correctamente
+        req.session.respuestas_preguntas.push(req.quiz.id);       // Guarda el ID de la nueva pregunta contestada correctamente
     }
 
-    var score = req.session.answered_questions.length-1;    // Puntuación
+    var score = req.session.respuestas_preguntas.length-1;    // Puntuación: número de respuestas correctas
 
     res.render('quizzes/random_result', {
         score: score,   
