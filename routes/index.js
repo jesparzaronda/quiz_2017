@@ -140,4 +140,10 @@ router.delete('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)',
 router.get('/quizzes/randomplay',					quizController.randomplay);
 router.get('/quizzes/randomcheck/:quizId(\\d+)', 	quizController.randomcheck);
 
+// Definición de rutas de Tips
+router.delete('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)',
+    sessionController.loginRequired,
+    tipController.adminOrAuthorRequired,
+    tipController.destroy);
+
 module.exports = router;

@@ -19,6 +19,18 @@ exports.load = function (req, res, next, tipId) {
     });
 };
 
+//PERMITE MODIFICAR SOO AL ADMIN O AUTOR DEL QUIZ
+exports.adminOrAuthorRequired = function(req, res, next){
+    var isAdmin = req.session.user.isAdmin;
+    var isAuthor = req.tip.AuthorId === req.session.user.id;
+
+    if(isAdmin || isAuthor){
+        next();
+    }else{
+        console.log('Acceso denegado. Solo autorizado el Admin y el autor del tip.');
+        res.send(403);
+    }
+}
 
 // GET /quizzes/:quizId/tips/new
 exports.new = function (req, res, next) {
