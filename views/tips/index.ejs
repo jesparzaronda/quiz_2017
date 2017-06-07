@@ -6,7 +6,7 @@
 
         <% var isAdmin = session.user && session.user.isAdmin; %>
         <% var isQuizAuthor = session.user && quizAuthorId && quizAuthorId === session.user.id; %>
-        <% var isAdmin = session.user && tip.AuthorId && tip.AuthorId === session.user.id; %>
+        <% var isTipAdmin = session.user && tip.AuthorId && tip.AuthorId === session.user.id; %>
 
         <% if (tip.accepted || isAdmin || isQuizAuthor){
 
@@ -14,7 +14,7 @@
         <li>
             <%= tip.text %>
 
-            <small> (by <span ide="autor"><%= tip.Author.username : "Anónimo" %></span>) </small>
+            <small> (by <span id="autor"><%= tip.Author.username : "Anónimo" %></span>) </small>
 
          
 
